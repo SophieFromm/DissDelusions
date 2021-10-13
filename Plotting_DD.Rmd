@@ -1,0 +1,166 @@
+---
+title: "Plot_DissDel"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+rm(list=ls())
+
+## Preparations - Load  packages and data 
+library(readxl)
+library(tidyverse)
+library(ggpubr)
+library(dplyr)
+library(ggplot2)
+library(RColorBrewer)
+library(knitr)
+library(kableExtra)
+library(gridExtra)
+library(grid)
+library(ggplot2)
+library(lattice)
+
+#round to 2 and pvalues to 3 digits after comma
+options(scipen = 1, digits = 2)
+f_pvalue = function(p.value, symbol = "="){
+  p.value <- round(p.value, digits = 3)
+  if (p.value == 0) {
+    return("p < .001")
+  } else {
+    return(paste0("p", symbol, round(p.value, digits = 3)))
+  }
+}
+
+#Load data
+DD_data_all <- readxl::read_excel("RDissociateDelusion_data_cleanR.xlsx")
+DD_data_all$cat_group <- as.integer(as.factor(DD_data_all$group_DD))
+mapping <- c("1" = "HC", "2" = "HC+D", "3" = "SZ","4" = "SZ+D")
+DD_data_all$cat_group<- mapping[DD_data_all$cat_group]
+
+#aborted trajectories
+DD_data<-filter(DD_data_all,Code!="sz_10_014" & Code!="sz_20_123" & Code!="sz_20_136" & Code!= "sz_20_196")
+
+#Nonfitter
+DD_data_fitter<-filter(DD_data, Code!="sz_20_178"  & Code!="sz_10_020"& Code!="sz_10_050" & Code!="sz_20_124" & Code!="sz_20_087" & Code!="sz_00_083" & Code!="sz_20_082" & Code!="sz_20_154" &
+Code!='sz_20_182' & Code!='sz_20_108' & Code!='sz_20_194' & Code!='sz_20_195'&
+Code!='sz_00_022' & Code!='sz_00_102' & Code!='sz_10_033'& Code!='sz_10_036'&
+Code!='sz_20_023' & Code!='sz_20_035' & Code!='sz_20_082' & Code!='sz_20_092'& Code!='sz_20_120'& Code!='sz_20_158')
+
+#long format
+DD_data_long<-gather(DD_data, parameter_type, parameter_value,  M6_kappa:M6_beta)
+DD_data_long_fitter <-gather(DD_data_fitter, parameter_type, parameter_value,  M6_kappa:M6_beta)
+```
+
+
+```{r scatter, echo=FALSE, warning=FALSE,  message= FALSE, error = FALSE}
+# single scatter plot example
+ggscatter(data = DD_data, x = "M6_beta", y = "M6_m3", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "beta", ylab = "m3")
+```
+## Violines
+
+```{r `violine`, echo=FALSE, warning=FALSE,  message= FALSE, error = FALSE}
+# m3
+par(mfrow=c(3,3))
+pm3_fitter = ggplot(data = DD_data_fitter, aes(x = cat_group, y = M6_m3, fill = cat_group)) +  geom_violin(trim = FALSE) +   scale_fill_brewer(palette = "Paired") + labs(fill = "Group") + xlab("Group") + ylab('m3')  + stat_summary(fun.data=mean_sdl, geom="errorbar", color="red", width = .2) +  geom_jitter(dotsize = 0.5, fill = "black", height = 0, width = .06, alpha = .5)  + theme_classic(base_size = 20)+ stat_summary(fun=mean, geom="point", color="red") + theme(legend.position = "none")
+
+# beta
+pbeta_fitter = ggplot(data = DD_data_fitter, aes(x = cat_group, y = M6_beta, fill = cat_group))  +  geom_violin(trim = FALSE) +   scale_fill_brewer(palette = "Paired") + labs(fill = "Group") + xlab("Group") + ylab('β')  + stat_summary(fun.data=mean_sdl, geom="errorbar", color="red", width = .2) +  geom_jitter(dotsize = 0.5, fill = "black", height = 0, width = .06, alpha = .5)  + theme_classic(base_size = 20)+ stat_summary(fun=mean, geom="point", color="red") + theme(legend.position = "none")
+ 
+# mu3_0
+pmu3_0_fitter= ggplot(data = DD_data, aes(x = cat_group, y = M6_mu_0, fill = cat_group))  +  geom_violin(trim = FALSE) +   scale_fill_brewer(palette = "Paired") + labs(fill = "Group") + xlab("Group") + ylab('mu3_0')  + stat_summary(fun.data=mean_sdl, geom="errorbar", color="red", width = .2) +  geom_jitter(dotsize = 0.5, fill = "black", height = 0, width = .06, alpha = .5)  + theme_classic(base_size = 20)+ stat_summary(fun=mean, geom="point", color="red") + theme(legend.position = "none")
+dev.off()
+ 
+# theta
+ptheta_fitter= ggplot(data = DD_data_fitter, aes(x = cat_group, y = M6_theta, fill = cat_group)) +  geom_violin(trim = FALSE) +   scale_fill_brewer(palette = "Paired") + labs(fill = "Group") + xlab("Group") + ylab('Theta')  + stat_summary(fun.data=mean_sdl, geom="errorbar", color="red", width = .2) +  geom_jitter(dotsize = 0.5, fill = "black", height = 0, width = .06, alpha = .5)  + theme_classic(base_size = 20)+ stat_summary(fun=mean, geom="point", color="red") + theme(legend.position = "none")
+dev.off
+# omega
+pomega_fitter= ggplot(data = DD_data_fitter, aes(x = cat_group, y = M6_omega, fill = cat_group)) +  geom_violin(trim = FALSE) +   scale_fill_brewer(palette = "Paired") + labs(fill = "Group") + xlab("Group") + ylab('Omega')  + stat_summary(fun.data=mean_sdl, geom="errorbar", color="red", width = .2) +  geom_jitter(dotsize = 0.5, fill = "black", height = 0, width = .06, alpha = .5)  + theme_classic(base_size = 20)+ stat_summary(fun=mean, geom="point", color="red") + theme(legend.position = "none")
+# kappa
+pkappa_fitter= ggplot(data = DD_data_fitter, aes(x = cat_group, y = M6_kappa, fill = cat_group)) +  geom_violin(trim = FALSE) +   scale_fill_brewer(palette = "Paired") + labs(fill = "Group") + xlab("Group") + ylab('Kappa')  + stat_summary(fun.data=mean_sdl, geom="errorbar", color="red", width = .2) +  geom_jitter(dotsize = 0.5, fill = "black", height = 0, width = .06, alpha = .5)  + theme_classic(base_size = 20)+ stat_summary(fun=mean, geom="point", color="red") + theme(legend.position = "none")
+
+png("grid_params_all_fitter.png")
+grid.arrange(pm3_fitter, pbeta_fitter, ptheta_fitter, pomega_fitter, pkappa_fitter, nrow = 3)
+ dev.off()
+ 
+```
+
+
+## Mu3 Trajectories
+
+```{r mu3_phase, echo=FALSE, warning=FALSE,  message= FALSE, error = FALSE}
+# make table with mean per phase
+gd <- DD_data_fitter %>%  gather(phase, mu3_traj, mu3_pre:mu3_post) %>%
+        group_by(cat_group, phase) %>% summarise(mu3_traj = mean(mu3_traj))
+
+#rearrange the order
+new_gd = gd %>% arrange(match(phase, c("mu3_pre", "mu3_vol", "mu3_post")))
+
+m3_plot <- DD_data_fitter %>% gather(phase, mu3_traj, mu3_pre:mu3_post) %>% ggplot(aes(x=phase, y=mu3_traj, color=cat_group))  +  geom_jitter(width = .3, alpha = .3, size = 4, shape = 16)  +theme_classic() + geom_jitter(data = gd, shape = 15, size = 6, show.legend = FALSE, width = .1) +  labs(color = "Groups") + ylab("µ3") +theme_classic(base_size = 20)
+
+#save as png
+png("mu3_phase.png")
+m3_plot + scale_x_discrete(limits=c("mu3_pre","mu3_vol", "mu3_post"), labels=c("stable pre", "volatile", "stable post")) +scale_color_manual(values=c("dodgerblue4",  "navy","YellowGreen", "darkgreen")) + geom_path(data = new_gd, aes(x = phase, y = mu3_traj, group = cat_group))+ theme(legend.position = "none")
+dev.off()
+
+```
+
+## Sa2 Trajectories
+
+```{r σ2_phase, echo=FALSE, warning=FALSE,  message= FALSE, error = FALSE}
+# make table with mean per phase
+gd <- DD_data_fitter %>%  gather(phase, sa2_traj, sa2_pre:sa2_post) %>%
+        group_by(cat_group, phase) %>% summarise(sa2_traj = mean(sa2_traj))
+
+#rearrange
+new_gd = gd %>% arrange(match(phase, c("sa2_pre", "sa2_vol", "sa2_post")))
+
+sa2_plot <- DD_data_fitter %>% gather(phase, sa2_traj, sa2_pre:sa2_post) %>% ggplot(aes(x=phase, y=sa2_traj, color=cat_group))  +  geom_jitter(width = .3, alpha = .3, size = 4, shape = 16)+theme_classic() + geom_jitter(data = gd, shape = 15, size = 6, show.legend = FALSE, width = .1) +  labs(color = "Groups") + ylab("σ2")+  theme_classic(base_size = 20)
+
+#save as png
+png("sa2_phase.png")
+sa2_plot + scale_color_manual(values=c("dodgerblue4",  "navy","YellowGreen", "darkgreen")) + geom_path(data = new_gd, aes(x = phase, y = sa2_traj, group = cat_group))+ theme(legend.position = "none") + scale_x_discrete(limits=c("sa2_pre","sa2_vol", "sa2_post"), labels=c("stable pre", "volatile", "stable post"))
+dev.off()
+
+```
+
+## Epsi2 Trajectories
+
+```{r Ɛ2_phase, echo=FALSE, warning=FALSE,  message= FALSE, error = FALSE}
+# make table with mean per phase
+gd <- DD_data_fitter %>%  gather(phase, epsi2_traj, epsi2_pre:epsi2_post) %>%
+        group_by(cat_group, phase) %>% summarise(epsi2_traj = mean(epsi2_traj))
+
+#rearrange (rev is equal to the volatility phase here)
+new_gd = gd %>% arrange(match(phase, c("epsi2_pre", "epsi2_vol", "epsi2_post")))
+
+eps2_plot <- DD_data_fitter %>% gather(phase,  epsi2_traj, epsi2_pre:epsi2_post) %>% ggplot(aes(x=phase, y=epsi2_traj, color=cat_group))  +  geom_jitter(width = .3, alpha = .3, size = 4, shape = 16)+theme_classic() + geom_jitter(data = gd, shape = 15, size = 6, show.legend = FALSE, width = .1) +  labs(color = "Groups") + ylab("Ɛ2")+  theme_classic(base_size = 20) +theme(legend.position = "none")
+
+#save as png
+png("eps2_phase.png")
+eps2_plot + scale_color_manual(values=c("dodgerblue4",  "navy","YellowGreen", "darkgreen")) + geom_path(data = new_gd, aes(x = phase, y = epsi2_traj, group = cat_group))+ scale_x_discrete(limits=c("epsi2_pre", "epsi2_vol", "epsi2_post"), labels=c("stable pre", "volatile", "stable post"))
+dev.off()
+
+```
+
+## Epsi3 Trajectories
+
+```{r Ɛ3_phase, echo=FALSE, warning=FALSE,  message= FALSE, error = FALSE}
+# make table with mean per phase
+gd <- DD_data_fitter %>%  gather(phase, epsi3_traj, epsi3_pre:epsi3_post) %>%
+        group_by(cat_group, phase) %>% summarise(epsi3_traj = mean(epsi3_traj))
+
+#rearrange 
+new_gd = gd %>% arrange(match(phase, c("epsi3_pre", "epsi3_vol", "epsi3_post")))
+
+eps3_plot <- DD_data_fitter %>% gather(phase,  epsi3_traj, epsi3_pre:epsi3_post) %>% ggplot(aes(x=phase, y=epsi3_traj, color=cat_group))  +  geom_jitter(width = .3, alpha = .3, size = 4, shape = 16)+theme_classic() + geom_jitter(data = gd, shape = 15, size = 6, show.legend = FALSE, width = .1) +  labs(color = "Groups") + ylab("Ɛ3")+  theme_classic(base_size = 20)
+
+#save as png
+png("eps3_phase.png")
+eps3_plot + scale_color_manual(values=c("dodgerblue4",  "navy","YellowGreen", "darkgreen")) + geom_path(data = new_gd, aes(x = phase, y = epsi3_traj, group = cat_group))+ theme(legend.position = "none") + scale_x_discrete(limits=c("epsi3_pre", "epsi3_vol", "epsi3_post"), labels=c("stable pre", "volatile", "stable post"))
+dev.off()
+
+```
