@@ -1,12 +1,3 @@
----
-title: "DD_fmri"
-author: "Sophie Fromm"
-date: "14 6 2021"
-output: word_document
-theme: yeti
-#bibliography: lib_DD.bib
----
-
 ```{r setup_loadData, include=FALSE}
 rm(list=ls())
 
@@ -41,10 +32,10 @@ f_pvalue = function(p.value, symbol = "="){
   }
 }
 ```
-
+## Load Data
 ```{r LoadData, include=FALSE}
 #Load data n = 86
-DD_data_all <- readxl::read_excel("RDissociateDelusion_data_cleanR.xlsx")
+DD_data_all <- readxl::read_excel("RDD_clean_alldata.xlsx")
 
 #Create groups
 DD_data_all$cat_group <- as.integer(as.factor(DD_data_all$group_DD))
@@ -55,77 +46,47 @@ DD_data_all$cat_group<- mapping[DD_data_all$cat_group]
 DD_data_all$fIllness <-factor(DD_data_all$Illness)
 DD_data_all$fDelusion <-factor(DD_data_all$Delusion)
 ```
-
+## Select fitter / non-fitter by ID
 ```{r selectSamples, include=FALSE}
-#aborted trajectories results in n = 82
-DD_data<-filter(DD_data_all,Code!="sz_10_014" & Code!="sz_20_123" & Code!="sz_20_136" & Code!= "sz_20_196")
+#aborted trajectories results in n = 82 Code!="sz_10_014" & Code!="sz_20_123" & Code!="sz_20_136" & Code!= "sz_20_196"
 
-#Nonfitter results in n = 66
-DD_data_fitter<-filter(DD_data, Code!="sz_20_178" & Code!='sz_20_194' & Code!='sz_20_195' & Code!='sz_00_022'& Code!="sz_00_083" & Code!="sz_10_020" &  Code!='sz_10_033'& Code!='sz_10_036'& Code!="sz_10_050"  & Code!='sz_20_023'  & Code!="sz_20_082" & Code!="sz_20_087" & Code!='sz_20_092'& Code!='sz_20_120' & Code!="sz_20_154" &  Code!='sz_20_158')
+#Subs with good model-fit n = 66
+DD_data_fitter<-filter(DD_data_all, Code!="sz_10_014" & Code!="sz_20_123" & Code!="sz_20_136" & Code!= "sz_20_196" & Code!="sz_20_178" & Code!='sz_20_194' & Code!='sz_20_195' & Code!='sz_00_022'& Code!="sz_00_083" & Code!="sz_10_020" &  Code!='sz_10_033'& Code!='sz_10_036'& Code!="sz_10_050"  & Code!='sz_20_023'  & Code!="sz_20_082" & Code!="sz_20_087" & Code!='sz_20_092'& Code!='sz_20_120' & Code!="sz_20_154" &  Code!='sz_20_158')
 #& Code!='sz_20_035' & Code!="sz_20_124" & Code!='sz_20_108' & Code!='sz_00_102')Code!='sz_20_182'  &
 
-#long format
-DD_data_long<-gather(DD_data, parameter_type, parameter_value,  M6_kappa:M6_beta)
+#Subs without good model-fit n = 20
+DD_data_nonfitter <- filter(DD_data_all, Code=="sz_10_014"| Code=="sz_20_123" | Code=="sz_20_136" | Code== "sz_20_196" | Code=="sz_20_178" | Code=='sz_20_194' | Code=='sz_20_195' | Code=='sz_00_022'| Code=="sz_00_083" | Code=="sz_10_020" |  Code=='sz_10_033'| Code=='sz_10_036'| Code=="sz_10_050"  | Code=='sz_20_023'  | Code=="sz_20_082" | Code=="sz_20_087" | Code=='sz_20_092'| Code=='sz_20_120' | Code=="sz_20_154" |  Code=='sz_20_158')
+
+#Long format
+DD_data_long<-gather(DD_data_all, parameter_type, parameter_value,  M6_kappa:M6_beta)
 DD_data_long_fitter <-gather(DD_data_fitter, parameter_type, parameter_value,  M6_kappa:M6_beta)
 ```
-
-### Participants
-Our sample (n=`r nrow(DD_data)`, `r mean(DD_data$Alter)` ± `r sd(DD_data$Alter)`y, `r sum(DD_data$Geschlecht == "w")` females) comprised healthy participants (HC) with high (n= `r sum(DD_data$cat_group == "HC+D")` and without delusional ideation (n= `r sum(DD_data$cat_group == "HC")`), participants with diagnosed schizophrenia (SZ) with (n= `r sum(DD_data$cat_group == "SZ+D")`) and without delusions (n= `r sum(DD_data$cat_group == "SZ")`). Delusional ideation was determined based on the PDI-total score [@Peters2001] (total PDI < 7 for D- and total PDI > 9 for D+) in the non-clinical sub-sample (HC) and based on the PANSS-P1 item [@Kay1987] (P1<3 for D- and P1>4 for D+) in the clinical sub-sample (SZ).The samples differed in age, with the SZ groups being significantly older than the HC groups, (F(`r aov.age$anova_table$'num Df'[1]`, `r aov.age$anova_table$'den Df'[1]`) = `r aov.age$anova_table$F[1]`, p = `r aov.age$anova_table$'Pr(>F)'[1]`) as shown in Table 1.
-
-#Behavioral Task
-Participants performed 160 trials of a probabilistic reversal-learning task with stable and volatile task phases [@Boehme2015] [@Deserno2020]. Participants chose between two card stimuli that were presented in random ordering on the right and left side on the screen. Reward contingencies were anticorrelated (80/20). In the first 55 trials, the more rewarding card remained stable, followed by 55 trials of a volatile task phase, where contingencies changed every 15 to 20 trials. The last block consisted of 35 stable trials with a reversal of the more rewarding card from the first phase. The exact task structure was unique for  every participant.
-Behavioral Analysis
-Statistical analysis was performed using R software (R Core Team, 2020) and Matlab (). Raw behavioral choice data was analyzed regarding accuracy. To this end, we performed a 2x2x3 mixed factor ANOVA with the between-factors Delusion and Illness and the within-factor phase on the percentage of correct responses, defined as choosing the currently rewarded card.
-
-#Computational Modelling
-Model fitting was performed using the HGF toolbox v5.1 as part of the TNU Algorithms for Psychiatry-Advancing Science (TAPAS, http://www.translationalneuromodeling.org/tapas/). Model selection was performed with random-effects Bayesian Model Selection [BMS, spm_BMS in SPM12, ww.fil.ion.ucl.uk/spm] to compute free energy per subject and model, which allowed us to identify the best model according to protected exceedance probability (pxp). Pxp quantifies the likelihood that a model is more frequent than any of the models compared to and is protective against the “null” hypothesis that models are equally frequent within the population (Rigoux, Stephan, Friston, & Daunizeau, 2014). We applied the same model space as (Cole et al., 2020) to individual trial-by-trial choice data of participants. This model space encompasses a i) Rescorla Wagner Learning model, ii) 2-level Hierarchical Gaussian Filter model (HGF2), iii) standard 3-level HGF and iv) 3-level ‘mean-reverting’ HGF with an additional parameter representing constant subject-specific equilibria that volatility estimates remain attracted to. 
-The Rescorla-Wagner (Rescorla & Wagner, 1972) model updates Q- action values of a stimulus according to the observed reward prediction error (δ) scaled by a subject-specific learning rate (α).
-
-δQa, t= rt−Qa,tδQa, t= rt−Qa,t
-
-Qa, t+1=Qa,t+ α∗δQa, t
-
-The HGF-models formalize learning as a hierarchical multilevel process in which beliefs about hidden states dynamically evolve in form of Gaussian random walks. The first level (x1) represents whether a respective option was rewarded u(1), which is expressed as a continuous estimate of the reward-probability u(2) on the second level (x2). The third level (x3) describes the volatility of this value u(3). The speed of the evolution of these beliefs (step-size of random walks) is determined by the coupling to the next-highest level (σ1, σ2) and also changes throughout the trial, except on the top (3rd) level representing the constant meta-volatility (ϑ). The second-level belief has a tonic ω and a phasic component κ. The “mean-reverting” model introduced by Cole et al. (2020) introduces another constant component on the third level – the “equilibrium parameter” (m3). Higher values of m3 indicate higher average-levels of the volatility estimates and are in line with hypothesized lower precision of beliefs and higher uncertainty.
-Following Bayesian model selection, further analysis was based on the best-fitting model. Priors were set according to the behavioral modelling code in the repository from Cole (2020) to ensure comparability of modelling results. We compared free maximum a posteriori estimates (m3, μ3 k= (0), κ, ω, ϑ, β) across the 4 groups using Type III 2x2 ANOVAs. Finally, we performed a 2x2x3 mixed factor ANOVA, with factors Illness, Delusion and phase (stable, reversal, volatile) on phase-means of trajectories of second-level belief-uncertainty (σ2), third-level volatility (μ3) and precision-weighted PEs of the outcome and volatility (ɛ2, ɛ3).
-#fMRI Analysis
-Functional Magnetic Resonance Imaging.
-fMRI data was acquired on a 3 Tesla Siemens Trio scanner. The protocol included individual field maps acquired before the task to account for individual homogeneity differences of the magnetic field, T1-weighted structural images (TR=1300ms, TE=3.46ms, flip=10°, matrix=240×256, voxel size: 1×1×1mm, slices=170) and gradient echo T2*-weighted echo-planar images with blood oxygenation level dependent contrast (36 slices, covering the whole brain) in oblique orientation at 20° to AC-PC line with 2.5-mm thickness, 3x3mm² in-plane voxel resolution, 0.5- mm gap between slices, TR=2s, TE=22ms and a flip angle α=90°).
-
-#Preprocessing
-Neuroimaging data was analyzed with statistic parametric mapping (SPMXXX for preprocessing and SPM12 for first-level and group-level analyses; Wellcome Department of Imaging Neuroscience, London, UK; http://www.fil.ion.ucl.ac.uk/spmhttp://www.fil.ion.ucl.ac.uk/spm/software/spm) in Matlab R2019b (The MathWorks). Images were slice-time and motion-corrected, coregistered, spatially normalized to MNI space using subject-specific T1 scans and smoothed with an isotopic Gaussian kernel of 6mm.
-
-#First-level
-On the single-subject-level, we conducted an event-related analysis with the general linear model approach implemented in SPM12. As in previous studies (Iglesias, 2013, Katthagen, 2020) the base regressor spanned from trial onset to end. From the fitted learning trajectories we entered four parametric modulators that changed with onset of the cue, including the outcome prediction (μ1), 1st-level uncertainty (σ1), volatility estimate (μ3) and 2nd level uncertainty (σ2). We entered two modulators that only modelled the feedback phase and encoded the precision weighted prediction errors on the 2nd and 3rd level (ε2, ε3) resulting in six parametric modulators total. Additionally, six movement regressor were included as regressors of no interest as well as their temporal derivates and one regressor to flag scan-to-scan movement >1mm.
-Second-level
-We used the flexible factorial module of SPM12 to compute 2x2x6x82 ANOVAs, with factors illness, delusion, regressor and subject with age and gender entered as covariates. Linear contrasts were set to examine main and interaction effects of illness and delusion on μ3, ε2 and ε3.
-
-#Results
-##Raw Behavioral Results
-
-
-### Raw Behavioral Results
+## Descriptive stats on demo, cog, clin, behav variables
 ```{r Descriptives, echo = FALSE, warning = FALSE, message = FALSE, error = FALSE }
-# Descriptives of demographics and free model parameters
 options(digits = 3)
+# Descriptive stats raw behavior
 behav <- group_by(DD_data_fitter, group_DD) %>%
-  summarise_at(vars(CorrectPerc, p_stay, Alter), funs(mean, sd))
+  summarise_at(vars(CorrectPerc, p_stay, p_w_st, p_l_sw, Alter), funs(mean, sd))
+#Descriptive stats of clinical and cognitive variables
+clinical <-group_by(DD_data_fitter, group_DD) %>%
+  summarise_at(vars(Alter, PDIGesamt, PANSS_total, PANSS_pos_sum, PANSS_neg_sum, PANNS_gp_sum, CPZ), funs(mean, sd), na.rm = TRUE)
+cognitive <- group_by(DD_data_fitter, group_DD) %>%
+  summarise_at(vars(WST_raw,Wortliste,Digit_Span,TM_Asek,TM_Bsek,DSST), funs(mean, sd), na.rm = TRUE)
+# Descriptive stats model parameter
 params <- group_by(DD_data_fitter, cat_group) %>%
-   summarise_at(vars(Alter, CorrectPerc,M6_kappa, M6_omega, M6_theta, M6_beta, M6_m3, M6_mu_0), funs(mean, sd))
-
-# make table
-t(params) %>%
-  kbl(caption = "Summary of demographic and modeling parameters") %>%
-  kable_classic(full_width = F, html_font = "Times New Roman")
-
+  summarise_at(vars(M6_kappa, M6_omega, M6_theta, M6_beta, M6_m3, M6_mu_0), funs(mean, sd))
+``` 
+## Test stats on demo, cog, clin, behav variables
+```{r Test-stats, echo = FALSE, warning = FALSE, message = FALSE, error = FALSE }
 #Age ANOVA
- aov.age<-DD_data_fitter %>% 
+ aov.age<-DD_data_all %>% 
   aov_ez(
     data = .,
     dv = "Alter",
     id = "Code",
     between = c("Illness", "Delusion"))
-  
-#compare correct responses across groups and phases
+
+# Correct responses across phases
 mm.corr_perc<- DD_data_long_fitter %>% gather(phase, correct, Correct_pre:Correct_post) %>% 
   aov_ez(
      data = .,
@@ -134,37 +95,85 @@ mm.corr_perc<- DD_data_long_fitter %>% gather(phase, correct, Correct_pre:Correc
      within="phase",
      between = c("fIllness", "fDelusion")  )
 
-
-# examine pos-hoc tests
+# post-hoc tests for correct responses
 correct_phase<- emmeans(mm.corr_perc, c("phase"))
 correct_Illness<- emmeans(mm.corr_perc, c("fIllness"))
 ref_df <- as.data.frame(summary(correct_phase))
 contrast(correct_Illness, method="pairwise") # uses tukey adjustment for multiple testing
 contrast(correct_phase, method="pairwise")
 
-#explore correlations between parameters
-chart.corrs_new <- chart.Correlation(select(DD_data_fitter,M6_kappa:M6_beta), histogram=TRUE, pch=19)
+#2x2 anova on stay-switch behavior (no phases)
+formulae <- lapply(colnames(DD_data_fitter)[37:42], function(x) as.formula(paste0("dv= '",x,"'")))
+ANOVA_one <- lapply(formulae, function(x) afex::aov_ez(data = DD_data_fitter, x, id = "Code", between = c("fIllness","fDelusion"))) #covariate = "Alter", factorize = 0))
+
+#Example how to check anova assumptions
+#Normality
+vars_to_check <- DD_data_fitter[37:42] #example for stay-switch behavior
+apply(vars_to_check, MARGIN = 2,  FUN = function(x) shapiro.test(x))
+#Extreme values
+apply(vars_to_check, MARGIN = 2,  FUN = function(x) sum(is_extreme(x)))
+#Example Histogram for m3
+hist(DD_data_fitter$M6_m3, breaks = 20)
+
+# CLINICAL 1 sub MISSING
+#Manova and post-hoc anovas with illness x delusion
+DD_data_fitter_SZ <- subset(DD_data_fitter,Illness==1)
+DD_data_nonfitter_SZ <- subset(DD_data_nonfitter,Illness==1)
+clin.man_SZ <- manova(cbind(PANSS_total, PANSS_pos_sum, PANSS_neg_sum, PANNS_gp_sum, CPZ) ~ Delusion, data = DD_data_fitter_SZ)
+summary.aov(clin.man_SZ) 
+summary(clin.man_SZ, test = "Wilks")
+
+## Post hoc PDI
+DD_data_fitter_HC <- subset(DD_data_fitter,Illness==0)
+clin.man_HC <-aov(PDIGesamt ~ Delusion, data = DD_data_fitter_HC)
+summary.aov(clin.man_HC) 
+#summary(clin.man_hC, test = "Wilks")
+
+#COGNITIVE 2 subs MISSING
+#Manova on cognitive variables and post-hoc anovas with illness x delusion
+cog.man <- manova(cbind(WST_raw,Wortliste,Digit_Span,TM_Asek,TM_Bsek,DSST) ~ Illness*Delusion, data = DD_data_fitter)
+summary.aov(cog.man) 
+summary(cog.man, test = "Wilks")
+
+#For supplement compare fitter and nonfitter SZ
+res.PANSS<-t.test(DD_data_fitter_SZ$PANSS_total, DD_data_nonfitter_SZ$PANSS_total, alternative = "two.sided")
+res.ALTER<-t.test(DD_data_fitter_SZ$Alter, DD_data_nonfitter_SZ$Alter, alternative = "two.sided")
+res.CPZ<-t.test(DD_data_fitter_SZ$CPZ, DD_data_nonfitter_SZ$CPZ, alternative = "two.sided")
+res.CORRECT <- t.test(DD_data_fitter_SZ$CorrectPerc, DD_data_nonfitter_SZ$CorrectPerc, alternative = "two.sided")
+res.winst<- t.test(DD_data_fitter_SZ$p_w_st, DD_data_nonfitter_SZ$p_w_st, alternative = "two.sided")
+res.losw<-t.test(DD_data_fitter_SZ$p_l_st, DD_data_nonfitter_SZ$p_l_st, alternative = "two.sided")
+
+#Explore correlations between parameters
+#chart.corrs_new <-  chart.Correlation(DD_data_fitter %>% select((M6_kappa:M6_beta), histogram=TRUE, pch=19))
+
+# make little table
+#t(params) %>%
+#  kbl(caption = "Summary modeling parameters") %>%
+#  kable_classic(full_width = F, html_font = "Times New Roman")
+  
 ```
+## MANOVA and post-hoc ANOVAs on model params to compare between groups (Illness x Delusion)
+```{r parameter_MANOVA, echo=FALSE, warning=FALSE, message= FALSE, error = FALSE}
+#2.	One-way ANOVA between CHR and HC on all parameters
+#Manova on model params --> main effect of illness and delusion, no interaction
+params.man <- manova(cbind(M6_kappa, M6_omega, M6_theta, M6_beta, M6_mu_0, M6_m3) ~ Delusion * Illness, data = DD_data_fitter)
+summary.aov(params.man) 
+summary(params.man, test = "Wilks")
 
-Descriptive and test-statistics of percentage of correct responses and tendency to repeat the choice of the same are shown in Table 1. Across all phases, healthy participants chose more often the correct card compared to patients (t(1, `c_phase@dfargs[["Vdf"]][["Code:phase"]]`, `r mean(DD_data$Alter)` ± `r sd(DD_data$Alter)`y, `r sum(DD_data$Geschlecht == "w")` females) com
+# Post hoc ANOVAs on individual model parameters
+formulae <- lapply(colnames(DD_data_fitter)[4:10], function(x) as.formula(paste0("dv= '",x,"'")))
+ANOVA_one <- lapply(formulae, function(x) afex::aov_ez(data = DD_data_fitter, x, id = "Code", between = c("Illness", "Delusion")))
+#names(ANOVA_one) <- format(formulae)
+#F_val <-lapply(names(ANOVA_one), function(x){ANOVA_one[[x]][["anova_table"]][["F"]]})
 
-```{r one-way_ANOVA, echo=FALSE, warning=FALSE, message= FALSE, error = FALSE}
-#2.	One-way ANOVA between CHR and HC on all parameters; Cole: a.	 μ^3 is higher in CHR
-
-# Do the ANOVAs on all model parameters
-formulae <- lapply(colnames(DD_data_fitter)[26:32], function(x) as.formula(paste0("dv= '",x,"'")))
-ANOVA_one <- lapply(formulae, function(x) afex::aov_ez(data = DD_data_fitter, x, id = "Code", between = c("Illness", "Delusion"))) #covariate = "Alter", factorize = 0))
-names(ANOVA_one) <- format(formulae)
-F_val <-lapply(names(ANOVA_one), function(x){ANOVA_one[[x]][["anova_table"]][["F"]]})
-
-# -----------------------------following section was to check anova assumptions
+# -- Unstructured section  to check ANOVA assumptions
 # Check ANOVA assumptions; spread of all groups in plot 1 and 3 similar?
 # plot linear model from ANOVA
 par(mfrow=c(2,2))
 plot(ANOVA_one[[1]][["lm"]]) # do that for all ANOVAs an enter index manually (1-7)
 # Shapiro to check normality
 Alter <-array(DD_data_fitter$Alter)
-vars_to_check <- DD_data_fitter[26:32]
+vars_to_check <- DD_data_fitter[4:10] #kappa until beta
 apply(vars_to_check, MARGIN = 2,  FUN = function(x) shapiro.test(x))
 # Outliers: check number of extreme values (>3SD)
 apply(vars_to_check, MARGIN = 2,  FUN = function(x) sum(is_extreme(x)))
@@ -187,10 +196,10 @@ plot(ANOVA_one$M6_beta$lm,4)
 #plot residuals
 PlotQQ(residuals(ANOVA_one$M6_beta))
 #check normality of residuals
-#ols_test_normality(residuals(ANOVA_one$M6_beta))
+ols_test_normality(residuals(ANOVA_one$M6_beta))
 
 #---------------------------------------- this is all not great, therefore --> robust anova
-vars_to_check <- DD_data_fitter[26:32]
+vars_to_check <- DD_data_fitter[4:10]
 Anova_one_robust <-apply(vars_to_check, MARGIN = 2,  FUN = function(x) raov(x~fIllness*fDelusion,data=DD_data_fitter))
 F_val <-lapply(names(Anova_one_robust), function(x){Anova_one_robust[[x]][["table"]][1:3,4:5]})
 F_val <- data.frame(F_val)
@@ -212,10 +221,9 @@ theta_posthoc<- emmeans(ANOVA_one$M6_theta, c("Delusion"))
 contrast(theta_posthoc)
 
 ```
-
+## Illness x Delusion x Phase ANOVAs on trial-wise model params
 ```{r sa2_phase,  echo=FALSE, warning=FALSE,  message= FALSE, error = FALSE}
-histogram(DD_data_fitter$sa2)
-
+#histogram(DD_data_fitter$sa2)
 mm.sa2_phase<- DD_data_long_fitter%>%
   gather(phase, sa2_traj, sa2_pre:sa2_post) %>%
   afex::aov_ez(
@@ -227,16 +235,10 @@ mm.sa2_phase<- DD_data_long_fitter%>%
 
 shapiro.test(residuals(mm.sa2_phase))
 
-# mm suggests significant phase and Illness effect - post hoc tests:
+# mm suggests significant phase effect - post hoc tests:
 sa2phase<- emmeans(mm.sa2_phase, c("phase"))
 pairs(sa2phase)
-sa2Illness<- emmeans(mm.sa2_phase, c("Illness"))
-pairs(sa2Illness)
-sa2Delusion<- emmeans(mm.sa2_phase, c("Delusion"))
-pairs(sa2Delusion)
-
 ```
-
 ```{r mu3_phase, echo=FALSE, warning=FALSE,  message= FALSE, error = FALSE}
 # mixed model Illness x Delusion x Phase for mu3(k)
 mm.mu3k_phase<- DD_data_long_fitter%>% gather(phase, mu3_traj, mu3_pre:mu3_post) %>% 
@@ -245,15 +247,14 @@ mm.mu3k_phase<- DD_data_long_fitter%>% gather(phase, mu3_traj, mu3_pre:mu3_post)
      dv = "mu3_traj",
      id = "Code",
      within="phase",
-     between = c("Illness", "Delusion")  ) 
+     between = c("fIllness", "fDelusion")  ) 
 
 # mm suggests illness and phase effects - post-hoc:
 mu3kphase<- emmeans(mm.mu3k_phase, c("phase"))
 pairs(mu3kphase)
-mu3Illness<- emmeans(mm.mu3k_phase, c("Illness"))
+mu3Illness<- emmeans(mm.mu3k_phase, c("fIllness"))
 pairs(mu3Illness)
 ```
-
 ```{r epsi2_phase, echo=FALSE, warning=FALSE,  message= FALSE, error = FALSE}
 mm.epsi2_phase<- DD_data_long_fitter %>%gather(phase, epsi2_traj, epsi2_pre:epsi2_post) %>%
   afex::aov_ez(
@@ -261,12 +262,16 @@ mm.epsi2_phase<- DD_data_long_fitter %>%gather(phase, epsi2_traj, epsi2_pre:epsi
      dv = "epsi2_traj",
      id = "Code",
      within="phase",
-     between = c("Illness", "Delusion")  )
+     between = c("fIllness", "fDelusion")  )
 
-e2illphase<- emmeans(mm.epsi2_phase, c("phase", "Delusion"))
-pairs(e2illphase)
+e2delphase<- emmeans(mm.epsi2_phase, c("phase", "fDelusion"))
+e2phase <-emmeans(mm.epsi2_phase, c("phase"))
+contrast(e2phase)
+pairs(e2delphase)
+
+plot(e2delphase, by = NULL, comparisons = TRUE, adjust = "mvt", 
+     horizontal = FALSE, colors = "darkgreen")
 ```
-
 ```{r epsi3_phase, echo=FALSE, warning=FALSE,  message= FALSE, error = FALSE}
 mm.epsi3_phase<- DD_data_long_fitter %>%gather(phase, epsi3_traj, epsi3_pre:epsi3_post) %>%
   afex::aov_ez(
@@ -274,10 +279,10 @@ mm.epsi3_phase<- DD_data_long_fitter %>%gather(phase, epsi3_traj, epsi3_pre:epsi
      dv = "epsi3_traj",
      id = "Code",
      within="phase",
-     between = c("Illness", "Delusion")  )
+     between = c("fIllness", "fDelusion")  )
+e3phase <-emmeans(mm.epsi3_phase, c("phase"))
+pairs(e3phase)
 ```
-
-
 ```{r yeu_phase, echo=FALSE, warning=FALSE,  message= FALSE, error = FALSE}
 mm.yeu_phase<- DD_data_long_fitter %>%gather(phase, yeu_traj, yeu_pre:yeu_post) %>%
   afex::aov_ez(
@@ -285,6 +290,11 @@ mm.yeu_phase<- DD_data_long_fitter %>%gather(phase, yeu_traj, yeu_pre:yeu_post) 
      dv = "yeu_traj",
      id = "Code",
      within="phase",
-     between = c("Illness", "Delusion")  )
-
+     between = c("fIllness", "fDelusion")  )
+y2illphase<- emmeans(mm.yeu_phase, c("phase", "fIllness"))
+y2phase<- emmeans(mm.yeu_phase, c("phase"))
+y2ill<- emmeans(mm.yeu_phase, c("fIllness"))
+pairs(y2ill)
+pairs(y2phase)
+pairs(y2illphase)
 ```
